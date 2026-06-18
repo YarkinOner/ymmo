@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Annonces — Ymmo{% endblock %}
+{% block content %}
+<h1 class="mb-4">Biens immobiliers</h1>
+
+<form class="row g-2 mb-4" method="get">
+  <div class="col-md-3">
+    <input class="form-control" name="q" placeholder="Mot-clé..." value="{{ request.args.get('q','') }}">
+  </div>
+  <div class="col-md-2">
+    <input class="form-control" name="city" placeholder="Ville" value="{{ request.args.get('city','') }}">
+  </div>
+  <div class="col-md-2">
+    <select class="form-select" name="type">
+      <option value="">Type</option>
+      <option value="vente" {% if request.args.get('type')=='vente' %}selected{% endif %}>Vente</option>
+      <option value="location" {% if request.args.get('type')=='location' %}selected{% endif %}>Location</option>
+    </select>
+  </div>
+  <div class="col-md-2">
+    <input class="form-control" name="min_price" type="number" placeholder="Prix min" value="{{ request.args.get('min_price','') }}">
+  </div>
+  <div class="col-md-2">
+    <input class="form-control" name="max_price" type="number" placeholder="Prix max" value="{{ request.args.get('max_price','') }}">
+  </div>
+  <div class="col-md-1">
+    <button class="btn btn-dark w-100">🔍</button>
+  </div>
+</form>
+
+{% if listings %}
+<div class="row row-cols-1 row-cols-md-3 g-4">
+  {% for l in listings %}
+  <div class="col">
+    <div class="card h-100 shadow-sm">
+      {% if l.images %}
+        <img src="{{ l.images[0].url }}" class="card-img-top" style="height:180px;object-fit:cover" alt="">
+      {% else %}
+        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height:180px">Pas de photo</div>
+      {% endif %}
+      <div class="card-body">
+        <span class="badge {% if l.type=='vente' %}bg-danger{% else %}bg-primary{% endif %} mb-1">{{ l.type }}</span>
+        <h5 class="card-title">{{ l.title }}</h5>
+        <p class="text-muted mb-1">📍 {{ l.city }}</p>
+        <p class="mb-1">{{ l.area_m2 }} m² · {{ l.rooms }} pièces</p>
+        <p class="fw-bold text-success fs-5">{{ "{:,.0f}".format(l.price) }} €</p>
+      </div>
+      <div class="card-footer">
+        <a href="{{ url_for('listings.detail', id=l.id) }}" class="btn btn-outline-dark btn-sm w-100">Voir le bien</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+  <p class="text-muted">Aucun bien trouvé.</p>
+{% endif %}
+{% endblock %}

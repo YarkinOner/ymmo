@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Mes favoris{% endblock %}
+{% block content %}
+<h2>Mes favoris</h2>
+{% for fav in favorites %}
+<div class="card mb-2 p-3">
+  <a href="{{ url_for('listings.detail', id=fav.listing.id) }}">{{ fav.listing.title }}</a> — {{ fav.listing.city }} — {{ "{:,.0f}".format(fav.listing.price) }} €
+</div>
+{% else %}<p class="text-muted">Aucun favori.</p>
+{% endfor %}
+{% endblock %}

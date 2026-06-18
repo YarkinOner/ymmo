@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block title %}Analyse du marché — Ymmo{% endblock %}
+{% block content %}
+
+<h2 class="mb-1">Analyse du marché immobilier</h2>
+<p class="text-muted mb-4">Tendances et statistiques en temps réel</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card shadow-sm text-center p-3">
+      <div class="fs-1 fw-bold text-dark" id="kpi-total">—</div>
+      <div class="text-muted">Biens actifs</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm text-center p-3">
+      <div class="fs-1 fw-bold text-success" id="kpi-price">—</div>
+      <div class="text-muted">Prix moyen</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card shadow-sm text-center p-3">
+      <div class="fs-1 fw-bold text-primary" id="kpi-area">—</div>
+      <div class="text-muted">Surface moyenne</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm p-3">
+      <h5>Annonces par ville</h5>
+      <canvas id="cityChart" height="220"></canvas>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm p-3">
+      <h5>Vente vs Location</h5>
+      <canvas id="typeChart" height="220"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm p-3">
+      <h5>Prix moyen par type de bien</h5>
+      <canvas id="priceTypeChart" height="220"></canvas>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm p-3">
+      <h5>Prix au m² par ville</h5>
+      <canvas id="priceM2Chart" height="220"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-12">
+    <div class="card shadow-sm p-3">
+      <h5>Prix moyen vs Surface moyenne par ville</h5>
+      <canvas id="bubbleChart" height="120"></canvas>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+const COLORS = ['#212529','#495057','#868e96','#adb5bd','#ced4da','#dee2e6'];
+const GREEN = '#198754', BLUE = '#0d6efd', RED = '#dc3545', YELLOW = '#ffc107';
+
+fetch('/api/analytics').then(r => r.json()).then(data => {
+  document.getElementById('kpi-total').textContent = data.total_listings;
+  document.getElementById('kpi-price').textContent = data.avg_price.toLocaleString('fr-FR') + ' €';
+  document.getElementById('kpi-area').textContent = data.avg_area + ' m²';
+
+  new Chart(document.getElementById('cityChart'), {
+    type: 'bar',
+    data: {
+      labels: data.city_counts.map(d => d.city),
+      datasets: [{ label: 'Annonces', data: data.city_counts.map(d => d.count),
+        backgroundColor: COLORS, borderRadius: 6 }]
+    },
+    options: { plugins: { legend: { display: false } }, responsive: true,
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+  });
+
+  new Chart(document.getElementById('typeChart'), {
+    type: 'doughnut',
+    data: {
+      labels: data.type_dist.map(d => d.type),
+      datasets: [{ data: data.type_dist.map(d => d.count),
+        backgroundColor: [RED, BLUE], hoverOffset: 8 }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } }, responsive: true }
+  });
+
+  new Chart(document.getElementById('priceTypeChart'), {
+    type: 'bar',
+    data: {
+      labels: data.price_by_type.map(d => d.type),
+      datasets: [{ label: 'Prix moyen (€)', data: data.price_by_type.map(d => d.avg_price),
+        backgroundColor: GREEN, borderRadius: 6 }]
+    },
+    options: { plugins: { legend: { display: false } }, responsive: true,
+      scales: { y: { beginAtZero: true } } }
+  });
+
+  new Chart(document.getElementById('priceM2Chart'), {
+    type: 'bar',
+    data: {
+      labels: data.price_per_m2.map(d => d.city),
+      datasets: [{ label: '€/m²', data: data.price_per_m2.map(d => d.price_m2),
+        backgroundColor: YELLOW, borderRadius: 6 }]
+    },
+    options: { plugins: { legend: { display: false } }, responsive: true,
+      scales: { y: { beginAtZero: true } } }
+  });
+
+  new Chart(document.getElementById('bubbleChart'), {
+    type: 'bubble',
+    data: {
+      datasets: data.price_by_city.map((d, i) => ({
+        label: d.city,
+        data: [{ x: d.avg_area, y: d.avg_price, r: 12 }],
+        backgroundColor: COLORS[i % COLORS.length] + 'cc'
+      }))
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: { title: { display: true, text: 'Surface moyenne (m²)' } },
+        y: { title: { display: true, text: 'Prix moyen (€)' } }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Tableau de bord{% endblock %}
+{% block content %}
+<h2 class="mb-4">Tableau de bord agent</h2>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card text-center shadow-sm">
+      <div class="card-body">
+        <h3>{{ listings|length }}</h3>
+        <p class="text-muted mb-0">Mes annonces</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center shadow-sm">
+      <div class="card-body">
+        <h3>{{ contacts|length }}</h3>
+        <p class="text-muted mb-0">Messages reçus</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-center shadow-sm">
+      <div class="card-body">
+        <h3>{{ listings|selectattr('status','eq','sold')|list|length }}</h3>
+        <p class="text-muted mb-0">Vendus</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm p-3">
+      <h5>Annonces par ville</h5>
+      <canvas id="cityChart"></canvas>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm p-3">
+      <h5>Prix moyen par type de bien</h5>
+      <canvas id="priceChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<h5>Mes annonces</h5>
+<table class="table table-hover">
+  <thead><tr><th>Titre</th><th>Ville</th><th>Prix</th><th>Statut</th><th></th></tr></thead>
+  <tbody>
+  {% for l in listings %}
+  <tr>
+    <td><a href="{{ url_for('listings.detail', id=l.id) }}">{{ l.title }}</a></td>
+    <td>{{ l.city }}</td>
+    <td>{{ "{:,.0f}".format(l.price) }} €</td>
+    <td><span class="badge bg-{% if l.status=='active' %}success{% elif l.status=='sold' %}danger{% else %}secondary{% endif %}">{{ l.status }}</span></td>
+    <td>
+      <form method="post" action="{{ url_for('listings.delete_listing', id=l.id) }}" onsubmit="return confirm('Supprimer ?')">
+        <button class="btn btn-sm btn-outline-danger">✕</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+const cityLabels = {{ city_stats | map(attribute=0) | list | tojson }};
+const cityCounts = {{ city_stats | map(attribute=1) | list | tojson }};
+new Chart(document.getElementById('cityChart'), {
+  type: 'bar',
+  data: { labels: cityLabels, datasets: [{ label: 'Annonces', data: cityCounts, backgroundColor: '#212529' }] },
+  options: { plugins: { legend: { display: false } }, responsive: true }
+});
+
+const priceLabels = {{ price_stats | map(attribute=0) | list | tojson }};
+const priceValues = {{ price_stats | map(attribute=1) | list | tojson }};
+new Chart(document.getElementById('priceChart'), {
+  type: 'doughnut',
+  data: { labels: priceLabels, datasets: [{ data: priceValues, backgroundColor: ['#212529','#495057','#868e96','#ced4da','#f8f9fa'] }] },
+  options: { responsive: true }
+});
+</script>
+{% endblock %}

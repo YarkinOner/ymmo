@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}{{ listing.title }} — Ymmo{% endblock %}
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <h2>{{ listing.title }}</h2>
+    <p class="text-muted">📍 {{ listing.address }}, {{ listing.city }}</p>
+    <span class="badge {% if listing.type=='vente' %}bg-danger{% else %}bg-primary{% endif %}">{{ listing.type }}</span>
+    <span class="badge bg-secondary">{{ listing.property_type }}</span>
+
+    {% if listing.images %}
+    <div id="carousel" class="carousel slide mt-3" data-bs-ride="carousel">
+      <div class="carousel-inner">
+        {% for img in listing.images %}
+        <div class="carousel-item {% if loop.first %}active{% endif %}">
+          <img src="{{ img.url }}" class="d-block w-100" style="height:350px;object-fit:cover" alt="">
+        </div>
+        {% endfor %}
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#carousel" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carousel" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+    </div>
+    {% endif %}
+
+    <div class="row mt-4 text-center">
+      <div class="col"><strong>{{ "{:,.0f}".format(listing.price) }} €</strong><br><small class="text-muted">Prix</small></div>
+      <div class="col"><strong>{{ listing.area_m2 }} m²</strong><br><small class="text-muted">Surface</small></div>
+      <div class="col"><strong>{{ listing.rooms }}</strong><br><small class="text-muted">Pièces</small></div>
+    </div>
+
+    <hr>
+    <h5>Description</h5>
+    <p>{{ listing.description }}</p>
+
+    {% if current_user.is_authenticated and (current_user.id == listing.user_id or current_user.role == 'admin') %}
+    <form method="post" action="{{ url_for('listings.delete_listing', id=listing.id) }}" onsubmit="return confirm('Supprimer cette annonce ?')">
+      <button class="btn btn-danger btn-sm">Supprimer l'annonce</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="col-md-4">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h5>Agence</h5>
+        {% if listing.agency %}
+          <p><strong>{{ listing.agency.name }}</strong><br>{{ listing.agency.city }}</p>
+        {% endif %}
+        <p>Agent : {{ listing.agent.name if listing.agent else '—' }}</p>
+      </div>
+    </div>
+
+    {% if current_user.is_authenticated %}
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h5>Contacter l'agence</h5>
+        <form method="post" action="{{ url_for('listings.contact', id=listing.id) }}">
+          <textarea class="form-control mb-2" name="message" rows="3" placeholder="Votre message..." required></textarea>
+          <button class="btn btn-dark w-100">Envoyer</button>
+        </form>
+      </div>
+    </div>
+
+    <form method="post" action="{{ url_for('listings.toggle_favorite', id=listing.id) }}">
+      {% set is_fav = current_user.favorites | selectattr('listing_id','eq',listing.id) | list %}
+      <button class="btn {% if is_fav %}btn-warning{% else %}btn-outline-warning{% endif %} w-100">
+        {% if is_fav %}⭐ Retirer des favoris{% else %}☆ Ajouter aux favoris{% endif %}
+      </button>
+    </form>
+    {% else %}
+    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-dark w-100">Connectez-vous pour contacter</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
