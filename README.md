@@ -28,7 +28,7 @@ Ymmo est une plateforme web de gestion de biens immobiliers développée dans le
 ```bash
 # 1. Cloner le projet
 git clone https://github.com/YarkinOner/ymmo.git
-cd ymmo
+cd ymmo/ymmo
 
 # 2. Installer les dépendances
 pip install -r requirements.txt
