@@ -282,3 +282,16 @@ ymmo.local
 - Espace disque < 10% → alerte email
 - Tunnel VPN down → alerte SMS
 - Tentatives de connexion échouées > 10 → alerte sécurité
+
+---
+
+## 13. Captures d'écran — Démonstration
+
+### Serveur Windows Server 2022 — Rôles installés (AD DS, DNS)
+![Server Manager](screenshots/01-server-manager.png)
+
+### Structure Active Directory — Unités d'organisation et utilisateurs
+![Active Directory](screenshots/02-active-directory-users.png)
+
+### Stratégie de groupe — GPO-MotDePasse appliquée
+![GPO](screenshots/03-gpo-policy.png)
